@@ -29,18 +29,46 @@ def get_stores():
 
 @app.post("/store")
 def create_store():
-  store_data = request.get_json()
-  store_id = uuid.uuid4().hex
-  store = {**store_data, "id": store_id} 
-  stores[store_id] = store
+    store_data = request.get_json()
 
-  return store, 201
+    if "name" not in store_data:
+        abort(
+            404, 
+            message=f"Bad Request, ensure 'name' is included in JSON payload"
+        )
+
+    for store in store.values():
+        if store_data["name"] == store["name"]:
+            abort(400, message="Item already exists")
+
+    store_id = uuid.uuid4().hex
+    store = {**store_data, "id": store_id} 
+    stores[store_id] = store
+
+    return store, 201
 
 @app.post("/item")
 def create_item():
   item_data = request.get_json()
+  if (
+    "price" not in item_data or
+      "store_id" not in item_data or
+      "name" not in item_data
+    ):
+    abort(
+      404, 
+      message=f"Bad Request, ensure 'price', 'store_id' and 'name' are included in JSON payload"
+    )
+
+  for item in items.values():
+    if (
+      item_data["name"] == item["name"] and 
+      item_data["store_id"] == item["store_id"]
+    ):
+      abort(400, message="Item already exists")
+
   if item_data["store_id"] not in stores:
-     abort(404, message=f"Store {item_data['store_id']} not found")
+    abort(404, message="Store not found")
   
   item_id = uuid.uuid4().hex
   item = {**item_data, "id": item_id} 
