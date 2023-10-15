@@ -1,97 +1,20 @@
-import uuid
+from flask import Flask
+from flask_smorest import Api
 
-from flask import Flask, request
-from flask_smorest import abort 
-from db import items, stores
+from resources.item import blp as ItemBlueprint
+from resources.store import blp as StoreBlueprint
 
 app = Flask(__name__)
 
+app.config["PROPAGATE_EXCEPTIONS"] = True
+app.config["API_TITLE"] = "Stores REST API"
+app.config["API_VERSION"] = "v1"
+app.config["OPENAPI_VERSION"] = "3.0.3"
+app.config["OPENAPI_URL_PREFIX"] = "/"
+app.config["OPENAPI_SWAGGER_UI_PATH"] = "/swagger-ui"
+app.config["OPENAPI_SWAGGER_UI_URL"] = "https://cdn.jsdelivr.net/npm/swagger-ui-dist/"
 
-# stores = [
-#   {
-#     "name": "My Store",
-#     "items": [
-#       {
-#         "name": "Chair",
-#         "price": 16.99
-#       }
-#     ]
-#   }
-# ]
+api = Api(app)
 
-@app.route("/")
-def hello_world():
-    return "<p>Hello, World!</p>"
-
-@app.get("/store")
-def get_stores():
-  return {"stores": list(stores.values())}
-
-@app.post("/store")
-def create_store():
-    store_data = request.get_json()
-
-    if "name" not in store_data:
-        abort(
-            404, 
-            message=f"Bad Request, ensure 'name' is included in JSON payload"
-        )
-
-    for store in store.values():
-        if store_data["name"] == store["name"]:
-            abort(400, message="Item already exists")
-
-    store_id = uuid.uuid4().hex
-    store = {**store_data, "id": store_id} 
-    stores[store_id] = store
-
-    return store, 201
-
-@app.post("/item")
-def create_item():
-  item_data = request.get_json()
-  if (
-    "price" not in item_data or
-      "store_id" not in item_data or
-      "name" not in item_data
-    ):
-    abort(
-      404, 
-      message=f"Bad Request, ensure 'price', 'store_id' and 'name' are included in JSON payload"
-    )
-
-  for item in items.values():
-    if (
-      item_data["name"] == item["name"] and 
-      item_data["store_id"] == item["store_id"]
-    ):
-      abort(400, message="Item already exists")
-
-  if item_data["store_id"] not in stores:
-    abort(404, message="Store not found")
-  
-  item_id = uuid.uuid4().hex
-  item = {**item_data, "id": item_id} 
-  items[item_id] = item
-
-  return item, 201
-
-@app.get("/item")
-def get_items():
-  return {"items": list(items.values())}    
-
-@app.get("/store/<string:store_id>")
-def get_store(store_id):
-  
-  try:
-    return stores[store_id]
-  except KeyError:
-    abort(404, message=f"Store {store_id} not found")   
-  
-
-@app.get("/item/<string:item_id>")
-def get_item(item_id):
-  try:
-    return items[item_id]
-  except KeyError:
-    abort(404, message=f"Item {item_id} not found")
+api.register_blueprint(ItemBlueprint)
+api.register_blueprint(StoreBlueprint)
