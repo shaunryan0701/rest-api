@@ -14,10 +14,8 @@ class Item(MethodView):
     
     @blp.response(200, ItemSchema)
     def get(self, item_id):
-        try:
-            return items[item_id]
-        except KeyError:
-            abort(404, message=f"Item {item_id} not found") 
+      item = ItemModel.quwry.get_or_404(item_id)
+      return item
 
     def delete(self, item_id):
         try:
@@ -58,5 +56,5 @@ class ItemList(MethodView):
         except SQLAlchemyError:
             abort(500, message="An error occurred while inserting the item")
 
-        return item, 201
+        return item
     
