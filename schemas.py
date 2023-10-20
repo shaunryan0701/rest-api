@@ -6,7 +6,7 @@ class PlainItemSchema(Schema):
     price = fields.Float(required=True)
 
 
-class ItemSchemaUodate(Schema):
+class ItemSchemaUpdate(Schema):
     name = fields.Str()
     price = fields.Float()
 
