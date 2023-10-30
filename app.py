@@ -39,6 +39,13 @@ def create_app(db_url=None):
             "error": "token_expired"
         }, 401)
     
+    @jwt.additional_claims_loader
+    def add_claims_to_access_token(identity):
+        # identity 1 ise the first created user
+        if identity == 1:
+            return {"is_admin": True}
+        return {"is_admin": False}
+
     @jwt.invalid_token_loader
     def invalid_token_callback(error):
         return jsonify({
