@@ -11,6 +11,7 @@ from resources.item import blp as ItemBlueprint
 from resources.store import blp as StoreBlueprint
 from resources.tag import blp as TagBlueprint
 from resources.user import blp as UserBlueprint
+from blocklist import BLOCKLIST
 
 def create_app(db_url=None):
     app = Flask(__name__)
@@ -32,6 +33,17 @@ def create_app(db_url=None):
     app.config["JWT_SECRET_KEY"] = "460074764855456427819309585337132427"
     jwt = JWTManager(app)
 
+    @jwt.token_in_blocklist_loader
+    def check_if_token_in_blocklist(jwt_header, jwt_payload):
+        return jwt_payload["jti"] in BLOCKLIST
+    
+    @jwt.revoked_token_loader
+    def revoked_token_callback(jwt_header, jwt_payload):
+        return jsonify({
+            "description": "The token has been revoked",
+            "error": "token_revoked"
+        }, 401)
+
     @jwt.expired_token_loader
     def expired_token_callback(jwt_header, jwt_payload):   
         return jsonify({
@@ -41,7 +53,7 @@ def create_app(db_url=None):
     
     @jwt.additional_claims_loader
     def add_claims_to_access_token(identity):
-        # identity 1 ise the first created user
+        # identity 1 is the first created user
         if identity == 1:
             return {"is_admin": True}
         return {"is_admin": False}
