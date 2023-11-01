@@ -1,4 +1,4 @@
-#!/Users/shaun.ryan/Documents/GitHub/restAPIs/restAPI/.venv/bin/python3.10
+#!/Users/shaun.ryan/Documents/GitHub/restAPIs/restAPI/.venv/bin/python
 # -*- coding: utf-8 -*-
 import re
 import sys
