@@ -6,7 +6,8 @@ from models import UserModel
 from db import db
 from passlib.hash import pbkdf2_sha256 as sha256
 from sqlalchemy.exc import SQLAlchemyError
-from flask_jwt_extended import create_access_token
+from flask_jwt_extended import create_access_token, jwt_required, get_jwt
+from blocklist import BLOCKLIST 
 
 blp = Blueprint("Users", __name__, description="Operations on users")
 
@@ -35,8 +36,6 @@ class UserRegister(MethodView):
 @blp.route("/login")
 class UserLogin(MethodView):
     @blp.arguments(UserSchema)
-    @blp.response(200, UserSchema)
-
     def post(self, user_data):
       user = UserModel.query.filter_by(username=user_data["username"]).first()
 
@@ -48,7 +47,7 @@ class UserLogin(MethodView):
 
       access_token = create_access_token(identity=user.id, fresh=True)
 
-      return {"access_token": access_token}, 200
+      return {"access_token": access_token}
 
 @blp.route("/user/<int:user_id>")
 class User(MethodView):
@@ -64,3 +63,11 @@ class User(MethodView):
       db.session.commit()
 
       return {"message": "User deleted"}, 200
+    
+@blp.route("/logout")
+class UserLogout(MethodView):
+    @jwt_required()
+    def post(self):
+      jti = get_jwt()["jti"]
+      BLOCKLIST.add(jti)
+      return {"message": "Successfully logged out"}, 200
