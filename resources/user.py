@@ -6,7 +6,7 @@ from models import UserModel
 from db import db
 from passlib.hash import pbkdf2_sha256 as sha256
 from sqlalchemy.exc import SQLAlchemyError
-from flask_jwt_extended import create_access_token, jwt_required, get_jwt
+from flask_jwt_extended import create_access_token, create_refresh_token, get_jwt_identity, jwt_required, get_jwt
 from blocklist import BLOCKLIST 
 
 blp = Blueprint("Users", __name__, description="Operations on users")
@@ -46,8 +46,9 @@ class UserLogin(MethodView):
         abort(401, message="Invalid credentials")
 
       access_token = create_access_token(identity=user.id, fresh=True)
+      refresh_token = create_refresh_token(identity=user.id)
 
-      return {"access_token": access_token}
+      return {"access_token": access_token, "refresh_token": refresh_token}
 
 @blp.route("/user/<int:user_id>")
 class User(MethodView):
@@ -71,3 +72,15 @@ class UserLogout(MethodView):
       jti = get_jwt()["jti"]
       BLOCKLIST.add(jti)
       return {"message": "Successfully logged out"}, 200
+    
+
+@blp.route("/refresh")
+class TokenRefresh(MethodView):
+    @jwt_required(refresh=True)
+    def post(self):
+      user_id = get_jwt_identity()
+      access_token = create_access_token(identity=user_id, fresh=False)
+      
+      jti = get_jwt()["jti"]
+      BLOCKLIST.add(jti)
+      return {"access_token": access_token}, 200

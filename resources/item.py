@@ -23,7 +23,7 @@ class Item(MethodView):
         jwt = get_jwt()
         if not jwt["is_admin"]:
             abort(403, message="Admin privilege required")
-            
+
         item = ItemModel.query.get_or_404(item_id)
         db.session.delete(item)
         db.session.commit()
@@ -52,7 +52,7 @@ class ItemList(MethodView):
     def get(self):
         return ItemModel.query.all()
     
-    @jwt_required()
+    @jwt_required(fresh=True)
     @blp.arguments(ItemSchema)
     @blp.response(201, ItemSchema)
     def post(self, item_data):
