@@ -1,6 +1,7 @@
 from flask import Flask
 from flask.json import jsonify
 from flask_smorest import Api
+from flask_migrate import Migrate
 from flask_jwt_extended import JWTManager
 
 from db import db
@@ -27,6 +28,7 @@ def create_app(db_url=None):
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["PROPAGATE_EXCEPTIONS"] = True
     db.init_app(app)
+    migrate = Migrate(app, db)
 
     api = Api(app)
 
@@ -79,8 +81,8 @@ def create_app(db_url=None):
             "error": "authorization_required"
         }, 401)
     
-    with app.app_context():
-        db.create_all()
+    # with app.app_context():
+    #     db.create_all()
 
     api.register_blueprint(ItemBlueprint)
     api.register_blueprint(StoreBlueprint)
